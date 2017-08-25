@@ -1,0 +1,20 @@
+{
+  "name": "tor_scraper_example",
+  "version": "1.0.0",
+  "description": "Example script for scraping websites somewhat anonymously with tor.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "tor",
+    "scraper"
+  ],
+  "author": "JoeCal",
+  "license": "ISC",
+  "dependencies": {
+    "jsonexport": "^2.0.10",
+    "simple-headless-chrome": "^4.3.1",
+    "x-ray": "^2.3.2"
+  }
+}
