@@ -1,4 +1,6 @@
 const exec = require('child_process').exec;
+const path = require('path');
+const agents = require(path.join(__dirname, 'agents.js'));
 const jsonexport = require('jsonexport');
 const Xray = require('x-ray');
 const x = Xray();
@@ -8,10 +10,16 @@ const browser = new HeadlessChrome({
     headless: false, // Keep false
     chrome: {
       flags: [
-        '--proxy-server=socks5://127.0.0.1:9050'
+        '--proxy-server=socks5://127.0.0.1:9050',
+        '--user-agent=' + randomAgent()
       ]
     }
     });
+
+function randomAgent() {
+  let randomNumber = Math.floor(Math.random()*agents.length);
+  return agents[randomNumber];
+}
 
 console.log('Starting tor')
 exec("tor",
@@ -40,6 +48,10 @@ async function main() {
     console.log("Wait 5 seconds")
     await mainTab.wait(5000)
 
+    console.log("Close browser")
+    await mainTab.close(true)
+    await browser.close(true)
+
     console.log('Change ip')
     await exec("(echo authenticate \u0039\u0034\u0034\u0039; echo signal newnym; echo quit) | nc localhost 9051",
       (error, stdout, stderr) => {
@@ -51,20 +63,23 @@ async function main() {
       }
     )
 
-    console.log("Wait 5 seconds")
-    await mainTab.wait(5000)
+    console.log("Opening browser")
+    await browser.init()
 
-    console.log("Navigate to http://www.whatsmyip.org to check new ip")
-    await mainTab.goTo('http://www.whatsmyip.org')
+    console.log("Setting private tab")
+    const newTab = await browser.newTab({ privateTab: false }) // Keep false
+
+    console.log("Navigate to http://www.whatsmyip.org to check new ip and user agent")
+    await newTab.goTo('http://www.whatsmyip.org')
 
     console.log("Wait 5 seconds")
-    await mainTab.wait(5000)
+    await newTab.wait(5000)
 
     console.log("Navigate to https://news.ycombinator.com to scrape data")
-    await mainTab.goTo('https://news.ycombinator.com')
+    await newTab.goTo('https://news.ycombinator.com')
 
     console.log('Evaluating table element')
-    const htmlTag = await mainTab.evaluate(function(selector) {
+    const htmlTag = await newTab.evaluate(function(selector) {
       const selectorHtml = document.querySelector(selector)
       return selectorHtml.innerHTML
     }, 'table.itemlist');
@@ -94,7 +109,7 @@ async function main() {
     })
 
     console.log("Close browser")
-    await mainTab.close(true)
+    await newTab.close(true)
     await browser.close(true)
 
   } catch (error) {

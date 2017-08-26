@@ -19,7 +19,3 @@ Now run this Command
 ```
 node index.js
 ```
-
-## Issues
-
-- Needs user agent switching support
