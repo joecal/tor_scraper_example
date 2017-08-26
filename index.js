@@ -5,7 +5,12 @@ const x = Xray();
 const fs = require('fs');
 const HeadlessChrome = require('simple-headless-chrome');
 const browser = new HeadlessChrome({
-    headless: false, // Set to true if you use a private tab and want to keep the browser headless
+    headless: false, // Keep false
+    chrome: {
+      flags: [
+        '--proxy-server=socks5://127.0.0.1:9050'
+      ]
+    }
     });
 
 console.log('Starting tor')
@@ -27,7 +32,7 @@ async function main() {
     await browser.init()
 
     console.log("Setting private tab")
-    const mainTab = await browser.newTab({ privateTab: false }) // Set to true after verifying ip switching
+    const mainTab = await browser.newTab({ privateTab: false }) // Keep false
 
     console.log("Navigate to http://www.whatsmyip.org to check ip")
     await mainTab.goTo('http://www.whatsmyip.org')
@@ -76,16 +81,12 @@ async function main() {
         throw error
       } else {
         console.log(data)
-        let temp_array = [];
         let json_object = await JSON.stringify(data);
-
-        console.log('Pushing data to temp_array')
-        await temp_array.push(data)
 
         console.log('Writing scraped data to results.json and results.csv')
         await fs.writeFileSync('results.json', json_object, 'utf8');
 
-        await jsonexport(temp_array,(err, csv) => {
+        await jsonexport(data,(err, csv) => {
           if(err) return console.log(err);
           fs.writeFileSync('results.csv', csv, 'ascii');
         });
